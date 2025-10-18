@@ -1,18 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
-
   <PropertyGroup>
     <WarningLevel>5</WarningLevel>
     <AnalysisLevel>5</AnalysisLevel>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
   </PropertyGroup>
-
   <ItemGroup>
-    <Compile Include="Library.fs" />
+    <Compile Include="ITimeService.fs" />
+    <Compile Include="Calendar/FixedRepetitionInterval.fs" />
+    <Compile Include="Calendar/Repetition.fs" />
+    <Compile Include="Calendar/Weekday.fs" />
+    <Compile Include="Calendar/RepetitionEnd.fs" />
+    <Compile Include="Calendar/CustomRepetitionInterval.fs" />
+    <Compile Include="Calendar/Occurrence.fs" />
+    <Compile Include="Calendar/ExactTimeInterval.fs" />
+    <Compile Include="Calendar/TimeInterval.fs" />
+    <Compile Include="Calendar/CalendarEventId.fs" />
+    <Compile Include="Calendar/CalendarEvent.fs" />
+    <Compile Include="Weather/UnitsOfMeasure.fs" />
+    <Compile Include="Weather/TemperatureUnitsOfMeasure.fs" />
+    <Compile Include="Weather/TemperatureUnit.fs" />
+    <Compile Include="Weather/WeatherData.fs" />
+    <Compile Include="Weather/WeatherEntry.fs" />
+    <Compile Include="Weather/DayWeather.fs" />
   </ItemGroup>
-
 </Project>
