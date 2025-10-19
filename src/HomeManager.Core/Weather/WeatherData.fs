@@ -7,8 +7,8 @@ type WeatherDataError =
     | HumidityOutOfRange
     | NegativeWindSpeed
 
-type WeatherData = private {
-    Temperature: TemperatureUnit
+type WeatherData<[<Measure>] 'tempUnit> = private {
+    Temperature: float32<'tempUnit>
     Precipitation: float32<percent>
     Humidity: float32<percent>
     Wind: float32<meters / second>

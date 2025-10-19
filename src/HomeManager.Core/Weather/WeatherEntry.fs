@@ -2,9 +2,9 @@ namespace HomeManager.Core.Weather
 
 open System
 
-type WeatherEntry = {
+type WeatherEntry<[<Measure>] 'tempUnit> = {
     TimeOfDay: TimeOnly
-    Data: WeatherData
+    Data: WeatherData<'tempUnit>
 } with
 
     [<CompiledName("Create")>]

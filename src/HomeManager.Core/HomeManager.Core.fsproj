@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -22,7 +22,7 @@
     <Compile Include="Calendar/CalendarEvent.fs" />
     <Compile Include="Weather/UnitsOfMeasure.fs" />
     <Compile Include="Weather/TemperatureUnitsOfMeasure.fs" />
-    <Compile Include="Weather/TemperatureUnit.fs" />
+    
     <Compile Include="Weather/WeatherData.fs" />
     <Compile Include="Weather/WeatherEntry.fs" />
     <Compile Include="Weather/DayWeather.fs" />
