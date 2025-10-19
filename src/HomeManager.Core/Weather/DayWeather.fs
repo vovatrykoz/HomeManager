@@ -24,7 +24,7 @@ type DayWeather<[<Measure>] 'tempUnit> = {
     member this.AverageHumidity = this.LazyHumidAverage.Force()
 
     member private this.LazyWindAverage =
-        lazy (this.Entries |> Seq.averageBy (fun entry -> entry.Data.Wind))
+        lazy (this.Entries |> Seq.averageBy (fun entry -> entry.Data.WindSpeed))
 
     member this.AverageWindSpeed = this.LazyWindAverage.Force()
 

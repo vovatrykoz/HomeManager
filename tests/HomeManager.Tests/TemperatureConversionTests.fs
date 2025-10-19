@@ -3,7 +3,6 @@
 open HomeManager.Core.Weather
 open NUnit.Framework
 open FsCheck.NUnit
-open System
 
 module ``Temperature Conversion Tests`` =
     //

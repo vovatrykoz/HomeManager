@@ -11,8 +11,16 @@ type WeatherData<[<Measure>] 'tempUnit> = private {
     Temperature: float32<'tempUnit>
     Precipitation: float32<percent>
     Humidity: float32<percent>
-    Wind: float32<meters / second>
+    WindSpeed: float32<meters / second>
 } with
+
+    member x.GetTemperature = x.Temperature
+
+    member x.GetPrecipitation = x.Precipitation
+
+    member x.GetHumidity = x.Humidity
+
+    member x.GetWindSpeed = x.WindSpeed
 
     [<CompiledName("Create")>]
     static member create temperature precipitation humidity wind =
@@ -34,7 +42,7 @@ type WeatherData<[<Measure>] 'tempUnit> = private {
             Temperature = temperature
             Precipitation = precipitation
             Humidity = humidity
-            Wind = wind
+            WindSpeed = wind
         }
 
     [<CompiledName("TryCreate")>]
@@ -50,5 +58,5 @@ type WeatherData<[<Measure>] 'tempUnit> = private {
                 Temperature = temperature
                 Precipitation = precipitation
                 Humidity = humidity
-                Wind = wind
+                WindSpeed = wind
             }
