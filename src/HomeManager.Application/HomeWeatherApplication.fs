@@ -3,6 +3,9 @@
 open HomeManager.Core
 open System
 
+type WeatherProviderReturnedEmptyResponse(msg: string) =
+    inherit Exception(msg)
+
 type HomeWeatherApplication<[<Measure>] 'tempUnit>
     (weatherProvider: IWeatherProvider<'tempUnit>, weatherDisplay: IWeatherDisplay<'tempUnit>, timeService: ITimeService)
     =
@@ -21,7 +24,11 @@ type HomeWeatherApplication<[<Measure>] 'tempUnit>
             let nextWeek = today.AddDays HomeWeatherApplication<_>.ForecastRange
 
             let! forecast = weatherProvider.GetWeatherAsync today nextWeek
-            let weatherToday = forecast.[0]
+
+            if Array.isEmpty forecast then
+                raise (WeatherProviderReturnedEmptyResponse $"No weather data returned by the weather provider")
+
+            let weatherToday = Array.head forecast
             let currentTime = TimeOnly.FromDateTime now
 
             let currentWeather =
