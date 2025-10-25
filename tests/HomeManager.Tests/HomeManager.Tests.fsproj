@@ -26,5 +26,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\HomeManager.Core\HomeManager.Core.fsproj" />
+    <ProjectReference Include="..\..\src\HomeManager.Application\HomeManager.Application.fsproj" />
   </ItemGroup>
 </Project>

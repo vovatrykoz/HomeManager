@@ -62,6 +62,60 @@ module ``Day Weather Tests`` =
             Assert.That(actualTemperatureAverage, Is.EqualTo expectedTemperatureAverage)
 
     [<Property>]
+    let ``Can correctly calculate max temperature using the static member``
+        (time: DateTime)
+        (rawData: (DateTime * WeatherData<celsius>) list)
+        =
+        let day = DateOnly.FromDateTime time
+
+        if List.isEmpty rawData then
+            let actual = DayWeather<celsius>.create day Seq.empty
+
+            Assert.Throws<ArgumentException>(fun () -> actual |> DayWeather.calculateMaxTemperature |> ignore)
+            |> ignore
+        else
+
+            let data =
+                rawData
+                |> List.map (fun (date, data) -> WeatherEntry<_>.create (TimeOnly.FromDateTime date) data)
+                |> List.toSeq
+
+            let actual = DayWeather<celsius>.create day data
+            let actualTemperature = actual |> DayWeather.calculateMaxTemperature
+
+            let _, expected =
+                rawData |> List.maxBy (fun (_, rawEntry) -> rawEntry.GetTemperature)
+
+            Assert.That(actualTemperature, Is.EqualTo expected.GetTemperature)
+
+    [<Property>]
+    let ``Can correctly calculate min temperature using the static member``
+        (time: DateTime)
+        (rawData: (DateTime * WeatherData<celsius>) list)
+        =
+        let day = DateOnly.FromDateTime time
+
+        if List.isEmpty rawData then
+            let actual = DayWeather<celsius>.create day Seq.empty
+
+            Assert.Throws<ArgumentException>(fun () -> actual |> DayWeather.calculateMinTemperature |> ignore)
+            |> ignore
+        else
+
+            let data =
+                rawData
+                |> List.map (fun (date, data) -> WeatherEntry<_>.create (TimeOnly.FromDateTime date) data)
+                |> List.toSeq
+
+            let actual = DayWeather<celsius>.create day data
+            let actualTemperature = actual |> DayWeather.calculateMinTemperature
+
+            let _, expected =
+                rawData |> List.minBy (fun (_, rawEntry) -> rawEntry.GetTemperature)
+
+            Assert.That(actualTemperature, Is.EqualTo expected.GetTemperature)
+
+    [<Property>]
     let ``Can correctly calculate average precipitation using the static member``
         (time: DateTime)
         (rawData: (DateTime * WeatherData<celsius>) list)
@@ -168,6 +222,60 @@ module ``Day Weather Tests`` =
                 rawData |> List.averageBy (fun (_, rawEntry) -> rawEntry.GetTemperature)
 
             Assert.That(actualTemperatureAverage, Is.EqualTo expectedTemperatureAverage)
+
+    [<Property>]
+    let ``Can correctly calculate max temperature using the instacne member``
+        (time: DateTime)
+        (rawData: (DateTime * WeatherData<celsius>) list)
+        =
+        let day = DateOnly.FromDateTime time
+
+        if List.isEmpty rawData then
+            let actual = DayWeather<celsius>.create day Seq.empty
+
+            Assert.Throws<ArgumentException>(fun () -> actual.CalculateMaxTemperature() |> ignore)
+            |> ignore
+        else
+
+            let data =
+                rawData
+                |> List.map (fun (date, data) -> WeatherEntry<_>.create (TimeOnly.FromDateTime date) data)
+                |> List.toSeq
+
+            let actual = DayWeather<celsius>.create day data
+            let actualTemperature = actual.CalculateMaxTemperature()
+
+            let _, expected =
+                rawData |> List.maxBy (fun (_, rawEntry) -> rawEntry.GetTemperature)
+
+            Assert.That(actualTemperature, Is.EqualTo expected.GetTemperature)
+
+    [<Property>]
+    let ``Can correctly calculate min temperature using the instacne member``
+        (time: DateTime)
+        (rawData: (DateTime * WeatherData<celsius>) list)
+        =
+        let day = DateOnly.FromDateTime time
+
+        if List.isEmpty rawData then
+            let actual = DayWeather<celsius>.create day Seq.empty
+
+            Assert.Throws<ArgumentException>(fun () -> actual.CalculateMinTemperature() |> ignore)
+            |> ignore
+        else
+
+            let data =
+                rawData
+                |> List.map (fun (date, data) -> WeatherEntry<_>.create (TimeOnly.FromDateTime date) data)
+                |> List.toSeq
+
+            let actual = DayWeather<celsius>.create day data
+            let actualTemperature = actual.CalculateMinTemperature()
+
+            let _, expected =
+                rawData |> List.minBy (fun (_, rawEntry) -> rawEntry.GetTemperature)
+
+            Assert.That(actualTemperature, Is.EqualTo expected.GetTemperature)
 
     [<Property>]
     let ``Can correctly calculate average precipitation using the instance member``

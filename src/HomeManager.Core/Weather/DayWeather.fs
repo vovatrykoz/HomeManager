@@ -11,6 +11,12 @@ type DayWeather<[<Measure>] 'tempUnit> = {
     member this.CalculateAverageTemperature<'tempUnit>() =
         this |> DayWeather.calculateAverageTemperature
 
+    member this.CalculateMaxTemperature<'tempUnit>() =
+        this |> DayWeather.calculateMaxTemperature
+
+    member this.CalculateMinTemperature<'tempUnit>() =
+        this |> DayWeather.calculateMinTemperature
+
     member this.CalculateAveragePrecipitation<'tempUnit>() =
         this |> DayWeather.calculateAveragePrecipitation
 
@@ -32,6 +38,22 @@ type DayWeather<[<Measure>] 'tempUnit> = {
             raise (ArgumentException($"No weather entries exist for day {day}", nameof day.Entries))
 
         day.Entries |> Seq.averageBy (fun entry -> entry.Data.Temperature)
+
+    [<CompiledName("CalculateMaxTemperature")>]
+    static member calculateMaxTemperature<'tempUnit>(day: DayWeather<'tempUnit>) =
+        if day.Entries.IsEmpty then
+            raise (ArgumentException($"No weather entries exist for day {day}", nameof day.Entries))
+
+        let entry = day.Entries |> Seq.maxBy (fun entry -> entry.Data.Temperature)
+        entry.Data.Temperature
+
+    [<CompiledName("CalculateMinTemperature")>]
+    static member calculateMinTemperature<'tempUnit>(day: DayWeather<'tempUnit>) =
+        if day.Entries.IsEmpty then
+            raise (ArgumentException($"No weather entries exist for day {day}", nameof day.Entries))
+
+        let entry = day.Entries |> Seq.minBy (fun entry -> entry.Data.Temperature)
+        entry.Data.Temperature
 
     [<CompiledName("CalculateAveragePrecipitation")>]
     static member calculateAveragePrecipitation<'tempUnit>(day: DayWeather<'tempUnit>) =
