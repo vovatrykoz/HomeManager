@@ -7,7 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Generators.fs" />
-    <Compile Include="TemperatureConversionTests.fs" /><Compile Include="WeatherDataTests.fs" />
+    <Compile Include="TemperatureConversionTests.fs" /><Compile Include="WeatherDataTests.fs" /><Compile Include="WeatherEntryTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
