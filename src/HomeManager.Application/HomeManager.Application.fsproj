@@ -6,6 +6,8 @@
   <ItemGroup>
     <Compile Include="IWeatherProvider.fs" />
     <Compile Include="IWeatherDisplay.fs" />
+    <Compile Include="MockWeatherProvider.fs" />
+    <Compile Include="MockTimeService.fs" />
     <Compile Include="HomeWeatherApplication.fs" />
   </ItemGroup>
   <ItemGroup>

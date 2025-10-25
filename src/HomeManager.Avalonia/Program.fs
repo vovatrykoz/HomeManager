@@ -1,4 +1,4 @@
-﻿namespace CounterApp
+﻿namespace HomeManager.Avalonia
 
 open Avalonia
 open Avalonia.Controls.ApplicationLifetimes
@@ -8,44 +8,51 @@ open Avalonia.Controls
 open Avalonia.FuncUI
 open Avalonia.FuncUI.DSL
 open Avalonia.Layout
+open HomeManager.Core.Weather
 
 module Main =
+    open HomeManager.Application
+
+    let temperature =
+        SimpleWeatherPresenter(0.0f<celsius>, 50.0f<percent>, 50.0f<percent>, 3.0f<meters / second>)
+
+    let rec apiCallback (app: HomeWeatherApplication<celsius>) = app.RunAsync()
+
+    let otherComponent (state: IWritable<SimpleWeatherPresenter<celsius>>) =
+        Component(fun ctx ->
+            let state = ctx.usePassed state
+
+            TextBlock.create [
+                TextBlock.dock Dock.Top
+                TextBlock.fontSize 48.0
+                TextBlock.verticalAlignment VerticalAlignment.Center
+                TextBlock.horizontalAlignment HorizontalAlignment.Center
+                TextBlock.text $"Temperature: {state.Current.MaxTemperature} °C"
+            ])
 
     let view () =
         Component(fun ctx ->
-            let state = ctx.useState 0
+            let state = ctx.useState (temperature, false)
+            let mockWeatherProvider = MockWeatherProvider()
+            let display = AvaloniaWeatherDisplay state
+            let timeService = MockTimeService()
+            let app = HomeWeatherApplication<celsius>(mockWeatherProvider, display, timeService)
 
-            DockPanel.create [
-                DockPanel.children [
-                    Button.create [
-                        Button.dock Dock.Bottom
-                        Button.onClick (fun _ -> state.Set(state.Current - 1))
-                        Button.content "-"
-                        Button.horizontalAlignment HorizontalAlignment.Stretch
-                        Button.horizontalContentAlignment HorizontalAlignment.Center
-                    ]
-                    Button.create [
-                        Button.dock Dock.Bottom
-                        Button.onClick (fun _ -> state.Set(state.Current + 1))
-                        Button.content "+"
-                        Button.horizontalAlignment HorizontalAlignment.Stretch
-                        Button.horizontalContentAlignment HorizontalAlignment.Center
-                    ]
-                    TextBlock.create [
-                        TextBlock.dock Dock.Top
-                        TextBlock.fontSize 48.0
-                        TextBlock.verticalAlignment VerticalAlignment.Center
-                        TextBlock.horizontalAlignment HorizontalAlignment.Center
-                        TextBlock.text (string state.Current)
-                    ]
-                ]
-            ])
+            let callback () =
+                async {
+                    while true do
+                        app.RunAsync() |> Async.AwaitTask |> ignore
+                }
+
+            callback () |> Async.Start
+
+            ContentControl.create [ ContentControl.content (otherComponent state) ])
 
 type MainWindow() =
     inherit HostWindow()
 
     do
-        base.Title <- "Counter Example"
+        base.Title <- "Weather"
         base.Content <- Main.view ()
 
 type App() =

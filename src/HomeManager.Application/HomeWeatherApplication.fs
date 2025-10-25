@@ -23,6 +23,9 @@ type HomeWeatherApplication<[<Measure>] 'tempUnit>
             let today = now |> DateOnly.FromDateTime
             let nextWeek = today.AddDays HomeWeatherApplication<_>.ForecastRange
 
+            if not weatherProvider.UpdateNeeded then
+                return ()
+
             let! forecast = weatherProvider.GetWeatherAsync today nextWeek
 
             if Array.isEmpty forecast then
