@@ -15,7 +15,7 @@ type InvalidPercentage(value: float32<percent>) =
 type InvalidSpeed(value: float32<meters / second>) =
     member _.Get = value
 
-module internal Generators =
+module Generators =
     //
     module Units =
         //
@@ -51,6 +51,23 @@ module internal Generators =
         let invalidSpeedArb () =
             invalidSpeedGen () |> Gen.map (fun x -> InvalidSpeed x) |> Arb.fromGen
 
+    module Time =
+        open System
+
+        let timeOnlyGen () =
+            ArbMap.defaults.ArbFor<DateTime>()
+            |> Arb.toGen
+            |> Gen.map (fun d -> TimeOnly.FromDateTime d)
+
+        let timeOnlyArb () = timeOnlyGen () |> Arb.fromGen
+
+        let dateOnlyGen () =
+            ArbMap.defaults.ArbFor<DateTime>()
+            |> Arb.toGen
+            |> Gen.map (fun d -> DateOnly.FromDateTime d)
+
+        let dateOnlyArb () = dateOnlyGen () |> Arb.fromGen
+
 type HomeManagerGen() =
 
     static member ValidPercentage() = Generators.Units.validPercentageArb ()
@@ -61,3 +78,7 @@ type HomeManagerGen() =
         Generators.Units.invalidPercentageArb ()
 
     static member InvalidSpeed() = Generators.Units.invalidSpeedArb ()
+
+    static member TimeOnly() = Generators.Time.timeOnlyArb ()
+
+    static member DateOnly() = Generators.Time.dateOnlyArb ()

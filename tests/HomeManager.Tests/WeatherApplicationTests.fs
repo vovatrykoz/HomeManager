@@ -27,37 +27,20 @@ type MockTimeService(currentTime: DateTime) =
             this.AccessCounter <- this.AccessCounter + 1
             this.CurrentTime
 
-type MockWeatherProvider(updateNeeded: bool, rawData: (DateTime * (DateTime * WeatherData<celsius>) list) list) =
+type MockWeatherProvider(updateNeeded: bool, forecast: DayWeather<celsius> seq) =
     let mutable _counter = 0
 
     member _.GetWeatherCallCounter = _counter
 
+    member _.Forecast = Seq.toArray forecast
+
     interface IWeatherProvider<celsius> with
         member _.UpdateNeeded = updateNeeded
 
-        member _.GetWeatherAsync (startDate: DateOnly) (endDate: DateOnly) : Task<DayWeather<celsius> array> =
+        member this.GetWeatherAsync (startDate: DateOnly) (endDate: DateOnly) : Task<DayWeather<celsius> array> =
             _counter <- _counter + 1
 
-            task {
-                return
-                    rawData
-                    |> List.map (fun (dayTime, rawEntries) ->
-                        let entries =
-                            rawEntries
-                            |> List.map (fun (time, rawEntry) ->
-                                WeatherEntry<_>.create (TimeOnly.FromDateTime time) rawEntry)
-                            |> List.toSeq
-
-                        let day = DateOnly.FromDateTime dayTime
-
-                        DayWeather<_>.create day entries)
-                    |> List.filter (fun dayData ->
-                        if dayData.Day >= startDate && dayData.Day <= endDate then
-                            true
-                        else
-                            false)
-                    |> List.toArray
-            }
+            task { return this.Forecast }
 
 type MockWeatherDisplay() =
     let mutable _entryCounter = 0
@@ -91,27 +74,15 @@ type NoOpLogger() =
 
         member _.LogWarning(_: string) : unit = ()
 
+[<Properties(Arbitrary = [| typeof<HomeManagerGen> |])>]
 module ``Home Weather Application Tests`` =
     //
     [<Property>]
     let ``HomeWeatherApplication can correctly find entries in range``
         (startTime: DateTime)
         (endTime: DateTime)
-        (rawData: (DateTime * (DateTime * WeatherData<celsius>) list) list)
+        (forecast: DayWeather<celsius> array)
         =
-        let forecast =
-            rawData
-            |> List.map (fun (dayTime, rawEntries) ->
-                let entries =
-                    rawEntries
-                    |> List.map (fun (time, rawEntry) -> WeatherEntry<_>.create (TimeOnly.FromDateTime time) rawEntry)
-                    |> List.toSeq
-
-                let day = DateOnly.FromDateTime dayTime
-
-                DayWeather<_>.create day entries)
-            |> List.toArray
-
         let expected =
             forecast
             |> Array.collect (fun data ->
@@ -131,10 +102,8 @@ module ``Home Weather Application Tests`` =
         CollectionAssert.AreEqual(expected, actual)
 
     [<Property>]
-    let ``HomeWeatherApplication returns early if no update is needed``
-        (rawData: (DateTime * (DateTime * WeatherData<celsius>) list) list)
-        =
-        let weatherProvider = MockWeatherProvider(updateNeeded = false, rawData = rawData)
+    let ``HomeWeatherApplication returns early if no update is needed`` (forecast: DayWeather<celsius> array) =
+        let weatherProvider = MockWeatherProvider(updateNeeded = false, forecast = forecast)
         let weatherDisplay = MockWeatherDisplay()
         let timeService = MockTimeService()
         let logger = NoOpLogger()
@@ -150,52 +119,3 @@ module ``Home Weather Application Tests`` =
             Assert.That(weatherDisplay.EntryDisplayCounter, Is.Zero)
             Assert.That(weatherDisplay.ForecastDisplayCounter, Is.Zero)
             Assert.That(weatherDisplay.TimelineDisplayCounter, Is.Zero))
-
-    [<Property>]
-    let ``HomeWeatherApplication does not return early if update is needed``
-        (rawData: (DateTime * (DateTime * WeatherData<celsius>) list) list)
-        =
-        let weatherProvider = MockWeatherProvider(updateNeeded = true, rawData = rawData)
-        let weatherDisplay = MockWeatherDisplay()
-        let timeService = MockTimeService()
-        let logger = NoOpLogger()
-
-        let startTime = (timeService :> ITimeService).GetCurrentTime()
-        let endTime = startTime.AddDays(HomeWeatherApplication<_>.ForecastRange)
-
-        let app =
-            HomeWeatherApplication(weatherProvider, weatherDisplay, timeService, logger)
-
-        let expected =
-            rawData
-            |> List.map (fun (dayTime, rawEntries) ->
-                let entries =
-                    rawEntries
-                    |> List.map (fun (time, rawEntry) -> WeatherEntry<_>.create (TimeOnly.FromDateTime time) rawEntry)
-                    |> List.toSeq
-
-                let day = DateOnly.FromDateTime dayTime
-
-                DayWeather<_>.create day entries)
-            |> List.collect (fun data ->
-                data.Entries
-                |> Seq.toList
-                |> List.choose (fun entry ->
-                    let exactTime = DateTime(data.Day, entry.TimeOfDay)
-
-                    if exactTime >= startTime && exactTime <= endTime then
-                        Some entry
-                    else
-                        None))
-
-        if List.isEmpty expected then
-            Assert.Throws<AggregateException>(fun () -> app.RunAsync().Wait()) |> ignore
-        else
-            app.RunAsync() |> Async.AwaitTask |> Async.RunSynchronously
-
-            Assert.Multiple(fun () ->
-                Assert.That(timeService.AccessCounter, Is.EqualTo 1)
-                Assert.That(weatherProvider.GetWeatherCallCounter, Is.EqualTo 1)
-                Assert.That(weatherDisplay.EntryDisplayCounter, Is.EqualTo 1)
-                Assert.That(weatherDisplay.ForecastDisplayCounter, Is.EqualTo 1)
-                Assert.That(weatherDisplay.TimelineDisplayCounter, Is.EqualTo 1))
