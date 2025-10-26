@@ -1,7 +1,6 @@
 namespace HomeManager.Avalonia
 
 open HomeManager.Core.Weather
-open Avalonia.FuncUI
 
 type SimpleWeatherPresenter<[<Measure>] 'tempUnit>
     (

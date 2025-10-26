@@ -30,11 +30,30 @@ type TemporaryWeatherProvider() =
                 let data =
                     WeatherData<_>.create _temperature 0.0f<percent> 0.0f<percent> 0.0f<meters / second>
 
+                let stableData =
+                    WeatherData<_>.create 0.0f<celsius> 0.0f<percent> 0.0f<percent> 0.0f<meters / second>
+
                 let entries =
                     [
-                        (WeatherEntry<_>.create (TimeOnly.FromDateTime(startDate.ToDateTime(TimeOnly(5, 0)))) data)
+                        WeatherEntry<_>.create (TimeOnly(3, 0)) data
+                        WeatherEntry<_>.create (TimeOnly(4, 0)) data
+                        WeatherEntry<_>.create (TimeOnly(5, 0)) data
                     ]
                     |> List.toSeq
 
-                return [| (DayWeather.create startDate entries) |]
+                let nextDayEntries =
+                    [
+                        WeatherEntry<_>.create (TimeOnly.FromDateTime(endDate.ToDateTime(TimeOnly(3, 0)))) stableData
+                        WeatherEntry<_>.create (TimeOnly.FromDateTime(endDate.ToDateTime(TimeOnly(4, 0)))) stableData
+                        WeatherEntry<_>.create (TimeOnly.FromDateTime(startDate.ToDateTime(TimeOnly(5, 0)))) stableData
+                        WeatherEntry<_>.create (TimeOnly.FromDateTime(startDate.ToDateTime(TimeOnly(6, 0)))) stableData
+                        WeatherEntry<_>.create (TimeOnly.FromDateTime(startDate.ToDateTime(TimeOnly(7, 0)))) stableData
+                        WeatherEntry<_>.create (TimeOnly.FromDateTime(startDate.ToDateTime(TimeOnly(8, 0)))) stableData
+                    ]
+                    |> List.toSeq
+
+                return [|
+                    DayWeather.create startDate entries
+                    DayWeather.create (startDate.AddDays 1) nextDayEntries
+                |]
             }

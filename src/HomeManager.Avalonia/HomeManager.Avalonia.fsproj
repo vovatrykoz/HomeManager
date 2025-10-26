@@ -10,6 +10,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="SimpleWeatherPresenter.fs" />
+    <Compile Include="SimpleTimelinePresenter.fs" />
+    <Compile Include="SimpleForecastPresenter.fs" />
     <Compile Include="AvaloniaWeatherDisplay.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
