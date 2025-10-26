@@ -3,6 +3,6 @@ namespace HomeManager.Application
 open HomeManager.Core
 open System
 
-type MockTimeService() =
+type TimeService() =
     interface ITimeService with
-        member this.GetCurrentTime() = DateTime.Now
+        member _.GetCurrentTime() = DateTime.Now

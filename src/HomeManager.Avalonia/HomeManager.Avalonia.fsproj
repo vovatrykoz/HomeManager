@@ -3,6 +3,11 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
+  <PropertyGroup>
+    <WarningLevel>5</WarningLevel>
+    <AnalysisLevel>5</AnalysisLevel>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="SimpleWeatherPresenter.fs" />
     <Compile Include="AvaloniaWeatherDisplay.fs" />

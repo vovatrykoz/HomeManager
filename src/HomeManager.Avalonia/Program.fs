@@ -33,10 +33,13 @@ module Main =
     let view () =
         Component(fun ctx ->
             let state = ctx.useState (temperature, false)
-            let mockWeatherProvider = MockWeatherProvider()
+            let mockWeatherProvider = TemporaryWeatherProvider()
             let display = AvaloniaWeatherDisplay state
-            let timeService = MockTimeService()
-            let app = HomeWeatherApplication<celsius>(mockWeatherProvider, display, timeService)
+            let timeService = TimeService()
+            let logger = ConsoleLogger()
+
+            let app =
+                HomeWeatherApplication<celsius>(mockWeatherProvider, display, timeService, logger)
 
             let callback () =
                 async {

@@ -4,7 +4,7 @@ open HomeManager.Core.Weather
 open System
 open System.Threading.Tasks
 
-type MockWeatherProvider() =
+type TemporaryWeatherProvider() =
     let mutable _temperature = 1.0f<celsius>
 
     let mutable _lastUpdateTime = DateTime.Now
