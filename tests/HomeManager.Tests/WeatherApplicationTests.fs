@@ -87,14 +87,14 @@ module ``Home Weather Application Tests`` =
             forecast
             |> Array.collect (fun data ->
                 data.Entries
-                |> Seq.toArray
-                |> Array.choose (fun entry ->
+                |> Seq.choose (fun entry ->
                     let exactTime = DateTime(data.Day, entry.TimeOfDay)
 
                     if exactTime >= startTime && exactTime <= endTime then
                         Some entry
                     else
-                        None))
+                        None)
+                |> Seq.toArray)
 
         let actual =
             HomeWeatherApplication.GetAllEntriesInRange(startTime, endTime, forecast)
@@ -119,3 +119,49 @@ module ``Home Weather Application Tests`` =
             Assert.That(weatherDisplay.EntryDisplayCounter, Is.Zero)
             Assert.That(weatherDisplay.ForecastDisplayCounter, Is.Zero)
             Assert.That(weatherDisplay.TimelineDisplayCounter, Is.Zero))
+
+    [<Property>]
+    let ``HomeWeatherApplication does not return early if update is needed`` (inRangeForecast: InDateRangeForecast) =
+        let weatherProvider =
+            MockWeatherProvider(updateNeeded = true, forecast = inRangeForecast.Forecast)
+
+        let weatherDisplay = MockWeatherDisplay()
+        let timeService = MockTimeService()
+        let logger = NoOpLogger()
+
+        let app =
+            HomeWeatherApplication(weatherProvider, weatherDisplay, timeService, logger)
+
+        app.ForecastRangeDays <- (inRangeForecast.EndTime - inRangeForecast.StartTime).Days
+
+        if Array.isEmpty inRangeForecast.Forecast then
+            let ex =
+                Assert.Throws<AggregateException>(fun () -> app.RunAsync().Wait() |> ignore)
+
+            Assert.That(ex.InnerExceptions |> Seq.exists (fun innerEx -> innerEx :? NoForecastException), Is.True)
+        else
+            let distinctSorted =
+                inRangeForecast.Forecast
+                |> Array.sortBy (fun entry -> entry.Day)
+                |> Array.distinctBy (fun entry -> entry.Day)
+
+            let weatherToday = Array.head distinctSorted
+
+            if weatherToday.Entries.IsEmpty then
+                let ex =
+                    Assert.Throws<AggregateException>(fun () -> app.RunAsync().Wait() |> ignore)
+
+                Assert.That(
+                    ex.InnerExceptions
+                    |> Seq.exists (fun innerEx -> innerEx :? NoTodayWeatherDataException),
+                    Is.True
+                )
+            else
+                app.RunAsync() |> Async.AwaitTask |> Async.RunSynchronously
+
+                Assert.Multiple(fun () ->
+                    Assert.That(timeService.AccessCounter, Is.EqualTo 1)
+                    Assert.That(weatherProvider.GetWeatherCallCounter, Is.EqualTo 1)
+                    Assert.That(weatherDisplay.EntryDisplayCounter, Is.EqualTo 1)
+                    Assert.That(weatherDisplay.ForecastDisplayCounter, Is.EqualTo 1)
+                    Assert.That(weatherDisplay.TimelineDisplayCounter, Is.EqualTo 1))

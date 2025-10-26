@@ -2,6 +2,7 @@ namespace HomeManager.Tests
 
 open HomeManager.Core.Weather
 open FsCheck.FSharp
+open System
 
 type ValidPercentage(value: float32<percent>) =
     member _.Get = value
@@ -14,6 +15,14 @@ type InvalidPercentage(value: float32<percent>) =
 
 type InvalidSpeed(value: float32<meters / second>) =
     member _.Get = value
+
+type InDateRangeForecast(startTime: DateTime, endTime: DateTime, forecast: DayWeather<celsius> array) =
+
+    member _.StartTime = startTime
+
+    member _.EndTime = endTime
+
+    member _.Forecast = forecast
 
 module Generators =
     //
@@ -68,6 +77,39 @@ module Generators =
 
         let dateOnlyArb () = dateOnlyGen () |> Arb.fromGen
 
+    module Forecast =
+        open System
+
+        let inDateRangeForecastGen () =
+            let mergedMap =
+                ArbMap.defaults
+                |> ArbMap.mergeArb (Time.dateOnlyArb ())
+                |> ArbMap.mergeArb (Time.timeOnlyArb ())
+
+            mergedMap.ArbFor<DateTime * DateTime * DayWeather<celsius> array>()
+            |> Arb.toGen
+            |> Gen.filter (fun (startTime, endTime, data) ->
+                endTime > startTime
+                && data
+                   |> Array.forall (fun e ->
+                       let exactTime = e.Day.ToDateTime(TimeOnly.FromDateTime startTime)
+                       exactTime >= startTime && exactTime <= endTime))
+
+        let inDateRangeForecastArb () =
+            inDateRangeForecastGen ()
+            |> Gen.map (fun (startTime, endTime, data) -> InDateRangeForecast(startTime, endTime, data))
+            |> Arb.fromGen
+
+        let inRangeManualGen (startTime: DateTime) (endTime: DateTime) =
+            ArbMap.defaults.ArbFor<DateTime * DayWeather<celsius> array>()
+            |> Arb.toGen
+            |> Gen.filter (fun (randomTime, entries) ->
+                entries
+                |> Array.forall (fun e ->
+                    let exactTime = DateTime(e.Day, TimeOnly.FromDateTime randomTime)
+                    exactTime >= startTime && exactTime <= endTime))
+            |> Gen.map (fun (_, data) -> data)
+
 type HomeManagerGen() =
 
     static member ValidPercentage() = Generators.Units.validPercentageArb ()
@@ -82,3 +124,6 @@ type HomeManagerGen() =
     static member TimeOnly() = Generators.Time.timeOnlyArb ()
 
     static member DateOnly() = Generators.Time.dateOnlyArb ()
+
+    static member InDateRangeForecast() =
+        Generators.Forecast.inDateRangeForecastArb ()

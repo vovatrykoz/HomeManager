@@ -4,15 +4,21 @@ open HomeManager.Core
 open HomeManager.Core.Weather
 open System
 
-type EmptyWeatherDataException(msg: string) =
+type NoForecastException(msg: string) =
     inherit Exception(msg)
+
+type NoTodayWeatherDataException(msg: string, today: DateOnly) =
+    inherit Exception(msg)
+
+    member _.Today = today
 
 type HomeWeatherApplication<[<Measure>] 'tempUnit>
     (
         weatherProvider: IWeatherProvider<'tempUnit>,
         weatherDisplay: IWeatherDisplay<'tempUnit>,
         timeService: ITimeService,
-        logger: ILogger
+        logger: ILogger,
+        ?forecastRange: int
     ) =
     member _.WeatherProvider = weatherProvider
 
@@ -22,7 +28,7 @@ type HomeWeatherApplication<[<Measure>] 'tempUnit>
 
     member _.Logger = logger
 
-    static member ForecastRange = 7
+    member val ForecastRangeDays = defaultArg forecastRange 7 with get, set
 
     static member GetAllEntriesInRange(startTime: DateTime, endTime: DateTime, forecast: DayWeather<'tempUnit> array) =
         forecast
@@ -46,15 +52,28 @@ type HomeWeatherApplication<[<Measure>] 'tempUnit>
 
                 let now = this.TimeService.GetCurrentTime()
                 let today = now |> DateOnly.FromDateTime
-                let nextWeek = today.AddDays HomeWeatherApplication<_>.ForecastRange
-                let! forecast = weatherProvider.GetWeatherAsync today nextWeek
+                let forecastEndDay = today.AddDays this.ForecastRangeDays
+                let! forecast = weatherProvider.GetWeatherAsync today forecastEndDay
 
-                if Array.isEmpty forecast then
+                let filteredForecast =
+                    forecast |> Array.sortBy (fun e -> e.Day) |> Array.distinctBy (fun e -> e.Day)
+
+                if Array.isEmpty filteredForecast then
                     this.Logger.LogError "No weather data returned by the provider"
-                    raise (EmptyWeatherDataException $"No weather data returned by the provider")
+                    raise (NoForecastException $"No weather data returned by the provider")
 
-                let weatherToday = Array.head forecast
+                let weatherToday = Array.head filteredForecast
                 let currentTime = TimeOnly.FromDateTime now
+
+                if weatherToday.Entries.IsEmpty then
+                    this.Logger.LogError $"No weather data available for today ({weatherToday.Day})"
+
+                    raise (
+                        NoTodayWeatherDataException(
+                            $"No weather data available for today ({weatherToday.Day})",
+                            weatherToday.Day
+                        )
+                    )
 
                 let currentWeather =
                     weatherToday.Entries
