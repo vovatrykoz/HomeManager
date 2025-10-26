@@ -60,7 +60,14 @@ type HomeWeatherApplication<[<Measure>] 'tempUnit>
                     weatherToday.Entries
                     |> Seq.minBy (fun entry -> abs (entry.TimeOfDay - currentTime).Ticks)
 
+                let dayTimeSpan = now.AddDays 1
+
+                let timeline =
+                    HomeWeatherApplication.GetAllEntriesInRange(now, dayTimeSpan, forecast)
+
                 this.Logger.LogInfo "Displaying updated weather"
 
                 this.WeatherDisplay.DisplayEntry currentWeather
+                this.WeatherDisplay.DisplayTimeline timeline
+                this.WeatherDisplay.DisplayForecast forecast
         }
